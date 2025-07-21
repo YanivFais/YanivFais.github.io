@@ -1,2 +1,2 @@
-# YanivFais.github.io
-IO repository for Yaniv Fais
+Go to https://yanivfais.github.io/ to play with Floaing points
+
