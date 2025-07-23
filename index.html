@@ -3,373 +3,1272 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Interactive Floating-Point Format Visualizer</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Comprehensive Floating-Point Visualizer</title>
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: 'Inter', sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
         }
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fira+Code&display=swap');
-        .mono {
-            font-family: 'Fira Code', monospace;
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
         }
-        .input-field {
-            @apply w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white;
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
         }
-        .display-box {
-            @apply p-3 bg-gray-100 rounded-md text-center border border-gray-200;
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
         }
-        .bit-group {
-            @apply p-2 rounded-md text-white text-sm md:text-base cursor-pointer hover:opacity-90;
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
         }
-        .sign-bit { @apply bg-red-500; }
-        .exponent-bit { @apply bg-blue-500; }
-        .mantissa-bit { @apply bg-green-500; }
-        .input-small {
-            @apply w-full p-1 border border-gray-300 rounded-md text-sm mono focus:ring-indigo-500 focus:border-indigo-500;
+
+        .main-content {
+            padding: 30px;
+        }
+
+        .controls-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px solid #e9ecef;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .control-group label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #2c3e50;
+            font-size: 0.95em;
+        }
+
+        .control-group input, .control-group select {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        .control-group input:focus, .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .format-info {
+            background: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+
+        .format-info h3 {
+            color: #1976d2;
+            margin-bottom: 10px;
+            font-size: 1.2em;
+        }
+
+        .binary-display {
+            background: #fff;
+            border: 3px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+        }
+
+        .binary-display h3 {
+            margin-bottom: 20px;
+            color: #2c3e50;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        .bits-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+
+        .bit-numbers {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2px;
+            margin-bottom: 5px;
+        }
+
+        .bit-number {
+            width: 28px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            line-height: 10px;
+            background: #f0f0f0;
+            color: #666;
+            border-radius: 2px;
+            user-select: none;
+        }
+
+        .bit-number.dark {
+            background: #ddd;
+        }
+
+        .bit {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .bit:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .sign-bit {
+            background: #BBF;
+            color: #000;
+        }
+
+        .sign-bit:hover {
+            background: #99D;
+        }
+
+        .exponent-bit {
+            background: #BFB;
+            color: #000;
+        }
+
+        .exponent-bit:hover {
+            background: #9D9;
+        }
+
+        .mantissa-bit {
+            background: #FBB;
+            color: #000;
+        }
+
+        .mantissa-bit:hover {
+            background: #D99;
+        }
+
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 15px;
+            flex-wrap: wrap;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+
+        .values-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .value-box {
+            background: #f8f9fa;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            padding: 20px;
+            transition: border-color 0.3s ease;
+        }
+
+        .value-box:hover {
+            border-color: #667eea;
+        }
+
+        .value-box h4 {
+            margin-bottom: 12px;
+            color: #2c3e50;
+            font-size: 1.1em;
+        }
+
+        .value-box input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+        }
+
+        /* Specific width adjustments for different input fields */
+        #binaryInput {
+            font-size: 0.8em; /* Smaller font for binary to fit more characters */
+        }
+
+        /* Adjust the hex value box to be smaller */
+        .value-box:has(#hexInput) {
+            max-width: 250px;
+        }
+
+        .value-box input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .readonly {
+            background: #e9ecef !important;
+            cursor: not-allowed;
+        }
+
+        .components-section {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .components-section h3 {
+            color: #e65100;
+            margin-bottom: 20px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        .components-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .component-item {
+            background: white;
+            padding: 12px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+
+        .component-item h5 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+            font-size: 1em;
+        }
+
+        .component-inputs {
+            display: grid;
+            gap: 8px;
+        }
+
+        /* Sign component - narrower fields */
+        .component-item:first-child .component-inputs {
+            grid-template-columns: 40px 50px;
+        }
+
+        /* Exponent component - balanced fields */
+        .component-item:nth-child(2) .component-inputs {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        /* Mantissa component - wider fields */
+        .component-item:nth-child(3) .component-inputs {
+            grid-template-columns: 2fr 1fr;
+        }
+
+        .component-inputs input {
+            padding: 6px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            min-width: 0; /* Allow inputs to shrink */
+        }
+
+        .calculation-display {
+            background: #e8f5e8;
+            border: 2px solid #4caf50;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 25px;
+        }
+
+        .calculation-display h3 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+            text-align: center;
+        }
+
+        .formula {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2em;
+            text-align: center;
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            margin-bottom: 15px;
+        }
+
+        .result {
+            font-size: 1.4em;
+            font-weight: bold;
+            text-align: center;
+            color: #2e7d32;
+        }
+
+        .special-values {
+            background: #fff3e0;
+            border: 2px solid #ff9800;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .special-values.hidden {
+            display: none;
+        }
+
+        .actions {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 25px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #5a6268;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                margin: 10px;
+                border-radius: 10px;
+            }
+
+            .header {
+                padding: 20px;
+            }
+
+            .header h1 {
+                font-size: 2em;
+            }
+
+            .main-content {
+                padding: 20px;
+            }
+
+            .controls-section {
+                grid-template-columns: 1fr;
+                padding: 20px;
+            }
+
+            .bit {
+                width: 24px;
+                height: 24px;
+                font-size: 11px;
+            }
+
+            .values-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .components-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
-<body class="bg-gray-50 text-gray-800">
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Comprehensive Floating-Point Visualizer</h1>
+            <p>Explore and edit floating-point numbers in multiple formats with interactive bit manipulation</p>
+        </div>
 
-    <div class="container mx-auto p-4 md:p-8 max-w-5xl">
-        <header class="text-center mb-8">
-            <h1 class="text-4xl font-bold text-gray-800">Floating-Point Visualizer</h1>
-            <p class="text-lg text-gray-600 mt-2">Explore how different floating-point formats represent decimal numbers. Edit any field to see the others update.</p>
-        </header>
-
-        <main class="bg-white p-6 rounded-lg shadow-lg">
-            <!-- CONTROLS SECTION -->
-            <div class="grid md:grid-cols-3 gap-6 mb-8 border-b pb-8">
-                <div>
-                    <label for="decimalInput" class="block text-sm font-medium text-gray-700">Decimal Value</label>
-                    <input type="number" id="decimalInput" value="6.5" step="any" class="input-field mt-1">
-                </div>
-                <div>
-                    <label for="formatSelect" class="block text-sm font-medium text-gray-700">Select Format</label>
-                    <select id="formatSelect" class="input-field mt-1">
-                        <option value="fp32">FP32 (Single Precision)</option>
+        <div class="main-content">
+            <!-- Controls Section -->
+            <div class="controls-section">
+                <div class="control-group">
+                    <label for="formatSelect">Format</label>
+                    <select id="formatSelect">
+                        <option value="fp64">FP64 (Double Precision)</option>
+                        <option value="fp32" selected>FP32 (Single Precision)</option>
+                        <option value="bf16">BF16 (Brain Float)</option>
                         <option value="fp16">FP16 (Half Precision)</option>
-                        <option value="bf16">BF16 (BFloat16)</option>
                         <option value="fp8_e5m2">FP8 (E5M2)</option>
                         <option value="fp8_e4m3">FP8 (E4M3)</option>
-                        <option value="fp4_e2m1" selected>FP4 (E2M1 - OCP MX)</option>
+                        <option value="fp4_e2m1">FP4 (E2M1)</option>
                     </select>
                 </div>
-                <div>
-                    <label for="biasInput" class="block text-sm font-medium text-gray-700">Exponent Bias</label>
-                    <input type="number" id="biasInput" value="1" class="input-field mt-1">
+                <div class="control-group">
+                    <label for="decimalInput">Decimal Value</label>
+                    <input type="text" id="decimalInput" value="3.14159">
+                </div>
+                <div class="control-group">
+                    <label for="biasInput">Exponent Bias</label>
+                    <input type="number" id="biasInput" value="127">
+                </div>
+                <div class="control-group">
+                    <label for="useSpecialValues">Use Special Values</label>
+                    <select id="useSpecialValues">
+                        <option value="true">Yes (IEEE Standard)</option>
+                        <option value="false">No (All Exponents)</option>
+                    </select>
                 </div>
             </div>
 
-            <!-- RESULTS DISPLAY -->
-            <div class="space-y-6">
-                <!-- Binary Breakdown -->
-                <div>
-                    <h3 class="font-semibold text-lg mb-2">Binary Breakdown (Click to Flip Bit)</h3>
-                    <div id="binaryBreakdown" class="flex items-center space-x-1 md:space-x-2 p-3 bg-gray-50 rounded-lg overflow-x-auto">
-                        <!-- Content generated by JS -->
-                    </div>
+            <!-- Binary Display -->
+            <div class="binary-display">
+                <h3>Binary Representation (Click to Toggle Bits)</h3>
+                <div id="bitsContainer" class="bits-container">
+                    <!-- Bits will be generated here -->
                 </div>
-
-                <!-- Representations -->
-                <div class="grid md:grid-cols-3 gap-4">
-                    <div>
-                        <h3 class="font-semibold text-lg mb-2">Full Binary</h3>
-                        <input id="binaryValue" class="input-field mono text-sm break-all" />
+                <div class="legend">
+                    <div class="legend-item">
+                        <div class="legend-color sign-bit"></div>
+                        <span>Sign Bit</span>
                     </div>
-                    <div>
-                        <h3 class="font-semibold text-lg mb-2">Hexadecimal</h3>
-                        <input id="hexValue" class="input-field mono" />
+                    <div class="legend-item">
+                        <div class="legend-color exponent-bit"></div>
+                        <span>Exponent Bits</span>
                     </div>
-                    <div>
-                        <h3 class="font-semibold text-lg mb-2">Reconstructed Value</h3>
-                        <div id="reconstructedValue" class="display-box mono font-bold text-indigo-600">0.0</div>
+                    <div class="legend-item">
+                        <div class="legend-color mantissa-bit"></div>
+                        <span>Mantissa Bits</span>
                     </div>
-                </div>
-                
-                <!-- Decoded Parts -->
-                 <div>
-                    <h3 class="font-semibold text-lg mb-2">Decoded Components (Editable)</h3>
-                    <div class="grid grid-cols-3 gap-x-4 gap-y-2 p-4 border rounded-lg bg-gray-50">
-                        <!-- Sign -->
-                        <div class="font-medium">Sign</div>
-                        <div class="col-span-2">
-                            <label class="text-xs text-gray-500">Binary</label>
-                            <input id="compSignBin" class="input-small" maxlength="1"/>
-                        </div>
-                        
-                        <!-- Exponent -->
-                        <div class="font-medium">Exponent</div>
-                        <div>
-                            <label class="text-xs text-gray-500">Binary</label>
-                            <input id="compExpBin" class="input-small"/>
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-500">Decimal</label>
-                            <input type="number" id="compExpDec" class="input-small"/>
-                        </div>
-
-                        <!-- Mantissa -->
-                        <div class="font-medium">Mantissa</div>
-                         <div>
-                            <label class="text-xs text-gray-500">Binary</label>
-                            <input id="compMantBin" class="input-small"/>
-                        </div>
-                        <div>
-                            <label class="text-xs text-gray-500">Decimal</label>
-                            <input type="number" id="compMantDec" class="input-small"/>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Special Value Info -->
-                <div id="specialValueInfo" class="text-center text-gray-600 p-3 bg-yellow-50 rounded-md border border-yellow-200 hidden">
-                    <!-- Content generated by JS -->
                 </div>
             </div>
-        </main>
-        
-        <footer class="text-center mt-8 text-sm text-gray-500">
-            <p>IEEE 754 and OCP MX Floating point representation tool.</p>
-        </footer>
+
+            <!-- Values Grid -->
+            <div class="values-grid">
+                <div class="value-box">
+                    <h4>Binary Value</h4>
+                    <input type="text" id="binaryInput" placeholder="Binary representation">
+                </div>
+                <div class="value-box">
+                    <h4>Hexadecimal Value</h4>
+                    <input type="text" id="hexInput" placeholder="Hexadecimal representation">
+                </div>
+                <div class="value-box">
+                    <h4>Reconstructed Decimal</h4>
+                    <input type="text" id="reconstructedValue" class="readonly" readonly>
+                </div>
+            </div>
+
+            <!-- Components Section -->
+            <div class="components-section">
+                <h3>Individual Components (Editable)</h3>
+                <div class="components-grid">
+                    <div class="component-item">
+                        <h5>Sign</h5>
+                        <div class="component-inputs">
+                            <input type="text" id="signBinary" placeholder="Binary">
+                            <input type="number" id="signDecimal" placeholder="Decimal" min="0" max="1">
+                        </div>
+                    </div>
+                    <div class="component-item">
+                        <h5>Exponent</h5>
+                        <div class="component-inputs">
+                            <input type="text" id="exponentBinary" placeholder="Binary">
+                            <input type="number" id="exponentDecimal" placeholder="Decimal">
+                        </div>
+                    </div>
+                    <div class="component-item">
+                        <h5>Mantissa</h5>
+                        <div class="component-inputs">
+                            <input type="text" id="mantissaBinary" placeholder="Binary">
+                            <input type="number" id="mantissaDecimal" placeholder="Decimal">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calculation Display -->
+            <div class="calculation-display">
+                <h3>IEEE 754 Formula</h3>
+                <div class="formula" id="formulaDisplay">
+                    (-1)^sign × 2^exponent × (1.mantissa)
+                </div>
+                <div class="result" id="calculationResult">
+                    3.14159
+                </div>
+            </div>
+
+            <!-- Special Values Info -->
+            <div id="specialValuesInfo" class="special-values hidden">
+                <h4>Special Value Detected</h4>
+                <p id="specialValueText"></p>
+            </div>
+
+            <!-- Format Information -->
+            <div class="format-info">
+                <h3 id="formatTitle">FP32 (Single Precision)</h3>
+                <p id="formatDescription">32 bits total: 1 sign bit, 8 exponent bits, 23 mantissa bits</p>
+                <div id="formatLink"><a href="https://en.wikipedia.org/wiki/Single-precision_floating-point_format">More information</a></div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="actions">
+                <button class="btn btn-primary" onclick="clearAllBits()">Clear All Bits</button>
+                <button class="btn btn-primary" onclick="setAllBits()">Set All Bits</button>
+                <button class="btn btn-secondary" onclick="randomValue()">Random Value</button>
+                <button class="btn btn-secondary" onclick="resetToDefault()">Reset to π</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // --- Element Cache ---
-            const elements = {
-                decimalInput: document.getElementById('decimalInput'),
-                formatSelect: document.getElementById('formatSelect'),
-                biasInput: document.getElementById('biasInput'),
-                binaryBreakdown: document.getElementById('binaryBreakdown'),
-                binaryValue: document.getElementById('binaryValue'),
-                hexValue: document.getElementById('hexValue'),
-                reconstructedValue: document.getElementById('reconstructedValue'),
-                specialValueInfo: document.getElementById('specialValueInfo'),
-                compSignBin: document.getElementById('compSignBin'),
-                compExpBin: document.getElementById('compExpBin'),
-                compExpDec: document.getElementById('compExpDec'),
-                compMantBin: document.getElementById('compMantBin'),
-                compMantDec: document.getElementById('compMantDec'),
-            };
+        // Format definitions
+        const FORMATS = {
+            fp64: { name: 'FP64 (Double Precision)', totalBits: 64, expBits: 11, mantBits: 52, defaultBias: 1023, description: '64 bits total: 1 sign bit, 11 exponent bits, 52 mantissa bits',link: 'https://en.wikipedia.org/wiki/Double-precision_floating-point_format' },
+            fp32: { name: 'FP32 (Single Precision)', totalBits: 32, expBits: 8, mantBits: 23, defaultBias: 127, description: '32 bits total: 1 sign bit, 8 exponent bits, 23 mantissa bits',link: 'https://en.wikipedia.org/wiki/Single-precision_floating-point_format' },
+            bf16: { name: 'BF16 (Brain Float)', totalBits: 16, expBits: 8, mantBits: 7, defaultBias: 127, description: '16 bits total: 1 sign bit, 8 exponent bits, 7 mantissa bits' , link: 'https://en.wikipedia.org/wiki/Bfloat16_floating-point_format' },
+            fp16: { name: 'FP16 (Half Precision)', totalBits: 16, expBits: 5, mantBits: 10, defaultBias: 15, description: '16 bits total: 1 sign bit, 5 exponent bits, 10 mantissa bits',link: 'https://en.wikipedia.org/wiki/Half-precision_floating-point_format' },
+            fp8_e5m2: { name: 'FP8 (E5M2)', totalBits: 8, expBits: 5, mantBits: 2, defaultBias: 15, description: '8 bits total: 1 sign bit, 5 exponent bits, 2 mantissa bits',link: 'https://en.wikipedia.org/wiki/Floating-point_arithmetic#FP8_formats' },
+            fp8_e4m3: { name: 'FP8 (E4M3)', totalBits: 8, expBits: 4, mantBits: 3, defaultBias: 7, description: '8 bits total: 1 sign bit, 4 exponent bits, 3 mantissa bits' , link: 'https://www.opencompute.org/documents/ocp-8-bit-floating-point-specification-ofp8-revision-1-0-2023-12-01-pdf-1'},
+            fp4_e2m1: { name: 'FP4 (E2M1)', totalBits: 4, expBits: 2, mantBits: 1, defaultBias: 1, description: '4 bits total: 1 sign bit, 2 exponent bits, 1 mantissa bit', link: 'https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf' }
+        };
 
-            const FORMATS = {
-                'fp32':   { name: 'FP32', totalBits: 32, expBits: 8, mantBits: 23, defaultBias: 127 },
-                'fp16':   { name: 'FP16', totalBits: 16, expBits: 5, mantBits: 10, defaultBias: 15 },
-                'bf16':   { name: 'BF16', totalBits: 16, expBits: 8, mantBits: 7,  defaultBias: 127 },
-                'fp8_e5m2': { name: 'FP8 (E5M2)', totalBits: 8, expBits: 5, mantBits: 2, defaultBias: 15 },
-                'fp8_e4m3': { name: 'FP8 (E4M3)', totalBits: 8, expBits: 4, mantBits: 3, defaultBias: 7 },
-                'fp4_e2m1': { name: 'FP4 (E2M1)', totalBits: 4, expBits: 2, mantBits: 1, defaultBias: 1 },
-            };
-            
-            let state = {
-                bits: 0,
-                format: FORMATS.fp4_e2m1,
-                bias: 1
-            };
+        // Global state
+        let currentFormat = FORMATS.fp32;
+        let currentBias = 127;
+        let useSpecialValues = true;
+        let bits = 0n;
+        let isUpdating = false;
+        let userDecimalValue = '3.14159'; // Store user's original typed value
 
-            // --- Update Functions from User Input ---
-            function updateFromDecimal() {
-                const value = parseFloat(elements.decimalInput.value);
-                if (isNaN(value)) return;
-                const { bits } = floatToCustomFormat(value, state.format, state.bias);
-                state.bits = bits;
-                renderAll();
-            }
+        // DOM elements
+        const elements = {
+            formatSelect: document.getElementById('formatSelect'),
+            decimalInput: document.getElementById('decimalInput'),
+            biasInput: document.getElementById('biasInput'),
+            useSpecialValues: document.getElementById('useSpecialValues'),
+            formatTitle: document.getElementById('formatTitle'),
+            formatDescription: document.getElementById('formatDescription'),
+            bitsContainer: document.getElementById('bitsContainer'),
+            binaryInput: document.getElementById('binaryInput'),
+            hexInput: document.getElementById('hexInput'),
+            reconstructedValue: document.getElementById('reconstructedValue'),
+            signBinary: document.getElementById('signBinary'),
+            signDecimal: document.getElementById('signDecimal'),
+            exponentBinary: document.getElementById('exponentBinary'),
+            exponentDecimal: document.getElementById('exponentDecimal'),
+            mantissaBinary: document.getElementById('mantissaBinary'),
+            mantissaDecimal: document.getElementById('mantissaDecimal'),
+            formulaDisplay: document.getElementById('formulaDisplay'),
+            calculationResult: document.getElementById('calculationResult'),
+            specialValuesInfo: document.getElementById('specialValuesInfo'),
+            specialValueText: document.getElementById('specialValueText'),
+            formatLink: document.getElementById('formatLink')
+        };
 
-            function updateFromBits(newBits) {
-                if (isNaN(newBits)) return;
-                state.bits = newBits;
-                renderAll();
-            }
-            
-            function updateFromHex() {
-                const hexString = elements.hexValue.value.startsWith('0x') ? elements.hexValue.value.substring(2) : elements.hexValue.value;
-                const newBits = parseInt(hexString, 16);
-                updateFromBits(newBits);
-            }
+        // Initialize
+        function init() {
+            updateFormatInfo();
+            createBitDisplay();
+            updateFromDecimal();
+            setupEventListeners();
+        }
 
-            function updateFromBinary() {
-                const newBits = parseInt(elements.binaryValue.value, 2);
-                updateFromBits(newBits);
-            }
-
-            function updateFromComponents() {
-                const sign = parseInt(elements.compSignBin.value, 2) || 0;
-                const exp = parseInt(elements.compExpBin.value, 2) || 0;
-                const mant = parseInt(elements.compMantBin.value, 2) || 0;
-
-                if (isNaN(sign) || isNaN(exp) || isNaN(mant)) return;
-                
-                const newBits = (sign << (state.format.totalBits - 1)) | (exp << state.format.mantBits) | mant;
-                updateFromBits(newBits);
-            }
-
-            function onFormatChange() {
-                state.format = FORMATS[elements.formatSelect.value];
-                state.bias = state.format.defaultBias;
-                elements.biasInput.value = state.bias;
-                updateFromDecimal(); // Recalculate based on current decimal value for new format
-            }
-
-            // --- Core Conversion Logic ---
-            function floatToCustomFormat(value, format, bias) {
-                const buffer = new ArrayBuffer(4);
-                const view = new DataView(buffer);
-                view.setFloat32(0, value, false);
-                const fp32Bits = view.getUint32(0);
-
-                const sign = (fp32Bits >> 31) & 1;
-                let exp = (fp32Bits >> 23) & 0xFF;
-                let mant = fp32Bits & 0x7FFFFF;
-
-                const maxExp = (1 << format.expBits) - 1;
-
-                if (exp === 255) return { bits: (sign << (format.totalBits - 1)) | (maxExp << format.mantBits) | (mant ? (1 << (format.mantBits-1)) : 0), special: mant === 0 ? 'Infinity' : 'NaN' };
-                if (value === 0) return { bits: sign << (format.totalBits - 1), special: 'Zero' };
-
-                let newExp = exp - 127 + bias;
-                if (exp === 0) newExp = 1 - 127 + bias;
-
-                // Rounding logic: add half of the smallest representable bit before truncating
-                const rounding_add = 1 << (23 - format.mantBits - 1);
-                mant += rounding_add;
-
-                let newMant = mant >> (23 - format.mantBits);
-
-                if (newMant >= (1 << format.mantBits)) {
-                    newMant = 0;
-                    newExp++;
-                }
-
-                if (newExp <= 0) {
-                    newMant = (newMant | (1 << format.mantBits)) >> (1 - newExp);
-                    newExp = 0;
-                }
-
-                if (newExp >= maxExp) return { bits: (sign << (format.totalBits - 1)) | (maxExp << format.mantBits), special: 'Infinity (Overflow)' };
-                
-                const finalBits = (sign << (format.totalBits - 1)) | (newExp << format.mantBits) | newMant;
-                return { bits: finalBits, special: newExp === 0 ? 'Subnormal' : 'Normal' };
-            }
-
-            function customBitsToFloat(bits, format, bias) {
-                const sign = (bits >> (format.totalBits - 1)) & 1;
-                const exp = (bits >> format.mantBits) & ((1 << format.expBits) - 1);
-                const mant = bits & ((1 << format.mantBits) - 1);
-                const maxExp = (1 << format.expBits) - 1;
-
-                if (exp === maxExp) return mant === 0 ? (sign ? -Infinity : Infinity) : NaN;
-                if (exp === 0 && mant === 0) return sign ? -0.0 : 0.0;
-
-                let f_val;
-                if (exp === 0) { // Subnormal
-                    const mant_val = mant / Math.pow(2, format.mantBits);
-                    f_val = mant_val * Math.pow(2, 1 - bias);
-                } else { // Normal
-                    const mant_val = 1 + (mant / Math.pow(2, format.mantBits));
-                    f_val = mant_val * Math.pow(2, exp - bias);
-                }
-                return sign ? -f_val : f_val;
-            }
-
-            // --- Rendering Function (Single Source of Truth) ---
-            function renderAll() {
-                const { bits, format, bias } = state;
-                const { totalBits, expBits, mantBits } = format;
-
-                const signBit = (bits >> (totalBits - 1)) & 1;
-                const expVal = (bits >> mantBits) & ((1 << expBits) - 1);
-                const mantVal = bits & ((1 << mantBits) - 1);
-
-                // Update decimal input if it's not the source of the change
-                const reconstructed = customBitsToFloat(bits, format, bias);
-                if (document.activeElement !== elements.decimalInput) {
-                    elements.decimalInput.value = reconstructed;
-                }
-                elements.reconstructedValue.textContent = reconstructed.toPrecision(8);
-                
-                // Update binary/hex inputs if not the source of change
-                if (document.activeElement !== elements.binaryValue) {
-                    elements.binaryValue.value = bits.toString(2).padStart(totalBits, '0');
-                }
-                if (document.activeElement !== elements.hexValue) {
-                    elements.hexValue.value = '0x' + bits.toString(16).toUpperCase().padStart(Math.ceil(totalBits / 4), '0');
-                }
-                
-                // Update component inputs if not the source of change
-                if (!['compSignBin', 'compExpBin', 'compExpDec', 'compMantBin', 'compMantDec'].includes(document.activeElement.id)) {
-                    elements.compSignBin.value = signBit;
-                    elements.compExpBin.value = expVal.toString(2).padStart(expBits, '0');
-                    elements.compExpDec.value = expVal;
-                    elements.compMantBin.value = mantVal.toString(2).padStart(mantBits, '0');
-                    elements.compMantDec.value = mantVal;
-                }
-
-                // Update visual binary breakdown
-                const signStr = `<div class="bit-group sign-bit mono" data-pos="${totalBits - 1}">${signBit}</div>`;
-                let expStr = '';
-                for (let i = expBits - 1; i >= 0; i--) {
-                    expStr += `<div class="bit-group exponent-bit mono" data-pos="${mantBits + i}">${(expVal >> i) & 1}</div>`;
-                }
-                let mantStr = '';
-                for (let i = mantBits - 1; i >= 0; i--) {
-                    mantStr += `<div class="bit-group mantissa-bit mono" data-pos="${i}">${(mantVal >> i) & 1}</div>`;
-                }
-                elements.binaryBreakdown.innerHTML = `${signStr}<div class="w-2"></div>${expStr}<div class="w-2"></div>${mantStr}`;
-
-                // Update special value info
-                const maxExp = (1 << expBits) - 1;
-                let special = '';
-                if (expVal === maxExp) special = (mantVal === 0) ? 'Infinity' : 'NaN';
-                else if (expVal === 0 && mantVal === 0) special = 'Zero';
-                else if (expVal === 0) special = 'Subnormal';
-                else special = 'Normal';
-
-                if (special) {
-                    elements.specialValueInfo.textContent = `Value Type: ${special}`;
-                    elements.specialValueInfo.classList.remove('hidden');
-                } else {
-                    elements.specialValueInfo.classList.add('hidden');
-                }
-            }
-
-            // --- Event Listeners ---
-            elements.decimalInput.addEventListener('input', updateFromDecimal);
+        // Event listeners
+        function setupEventListeners() {
             elements.formatSelect.addEventListener('change', onFormatChange);
-            elements.biasInput.addEventListener('input', () => { state.bias = parseInt(elements.biasInput.value, 10) || 0; updateFromDecimal(); });
-            elements.binaryValue.addEventListener('input', updateFromBinary);
-            elements.hexValue.addEventListener('input', updateFromHex);
             
-            // Component listeners
-            elements.compSignBin.addEventListener('input', updateFromComponents);
-            elements.compExpBin.addEventListener('input', updateFromComponents);
-            elements.compMantBin.addEventListener('input', updateFromComponents);
-            elements.compExpDec.addEventListener('input', () => {
-                const decVal = parseInt(elements.compExpDec.value, 10) || 0;
-                elements.compExpBin.value = decVal.toString(2).padStart(state.format.expBits, '0');
-                updateFromComponents();
-            });
-            elements.compMantDec.addEventListener('input', () => {
-                const decVal = parseInt(elements.compMantDec.value, 10) || 0;
-                elements.compMantBin.value = decVal.toString(2).padStart(state.format.mantBits, '0');
-                updateFromComponents();
-            });
+            // Decimal input with full event handling
+            elements.decimalInput.addEventListener('input', updateFromDecimal);
+            elements.decimalInput.addEventListener('keydown', handleKeyDown(updateFromDecimal));
+            elements.decimalInput.addEventListener('focus', handleFocus);
+            elements.decimalInput.addEventListener('blur', updateFromDecimal);
+            
+            // Bias input with full event handling
+            elements.biasInput.addEventListener('input', onBiasChange);
+            elements.biasInput.addEventListener('keydown', handleKeyDown(onBiasChange));
+            elements.biasInput.addEventListener('focus', handleFocus);
+            elements.biasInput.addEventListener('blur', onBiasChange);
+            
+            elements.useSpecialValues.addEventListener('change', onSpecialValuesChange);
+            
+            // Binary input with full event handling
+            elements.binaryInput.addEventListener('input', updateFromBinary);
+            elements.binaryInput.addEventListener('keydown', handleKeyDown(updateFromBinary));
+            elements.binaryInput.addEventListener('focus', handleFocus);
+            elements.binaryInput.addEventListener('blur', updateDisplay);
+            
+            // Hex input with full event handling
+            elements.hexInput.addEventListener('input', updateFromHex);
+            elements.hexInput.addEventListener('keydown', handleKeyDown(updateFromHex));
+            elements.hexInput.addEventListener('focus', handleFocus);
+            elements.hexInput.addEventListener('blur', updateDisplay);
+            
+            // Component inputs - both binary and decimal
+            elements.signBinary.addEventListener('input', updateFromComponentsBinary);
+            elements.signBinary.addEventListener('keydown', handleKeyDown(updateFromComponentsBinary));
+            elements.signBinary.addEventListener('focus', handleFocus);
+            elements.signBinary.addEventListener('blur', updateDisplay);
+            
+            elements.signDecimal.addEventListener('input', updateFromComponentsDecimal);
+            elements.signDecimal.addEventListener('keydown', handleKeyDown(updateFromComponentsDecimal));
+            elements.signDecimal.addEventListener('focus', handleFocus);
+            elements.signDecimal.addEventListener('blur', updateDisplay);
+            
+            elements.exponentBinary.addEventListener('input', updateFromComponentsBinary);
+            elements.exponentBinary.addEventListener('keydown', handleKeyDown(updateFromComponentsBinary));
+            elements.exponentBinary.addEventListener('focus', handleFocus);
+            elements.exponentBinary.addEventListener('blur', updateDisplay);
+            
+            elements.exponentDecimal.addEventListener('input', updateFromComponentsDecimal);
+            elements.exponentDecimal.addEventListener('keydown', handleKeyDown(updateFromComponentsDecimal));
+            elements.exponentDecimal.addEventListener('focus', handleFocus);
+            elements.exponentDecimal.addEventListener('blur', updateDisplay);
+            
+            elements.mantissaBinary.addEventListener('input', updateFromComponentsBinary);
+            elements.mantissaBinary.addEventListener('keydown', handleKeyDown(updateFromComponentsBinary));
+            elements.mantissaBinary.addEventListener('focus', handleFocus);
+            elements.mantissaBinary.addEventListener('blur', updateDisplay);
+            
+            elements.mantissaDecimal.addEventListener('input', updateFromComponentsDecimal);
+            elements.mantissaDecimal.addEventListener('keydown', handleKeyDown(updateFromComponentsDecimal));
+            elements.mantissaDecimal.addEventListener('focus', handleFocus);
+            elements.mantissaDecimal.addEventListener('blur', updateDisplay);
+        }
 
-            // Click to flip bits
-            elements.binaryBreakdown.addEventListener('click', (e) => {
-                const target = e.target;
-                if (target.hasAttribute('data-pos')) {
-                    const pos = parseInt(target.getAttribute('data-pos'), 10);
-                    const newBits = state.bits ^ (1 << pos);
-                    updateFromBits(newBits);
+        // Helper function to handle focus events
+        function handleFocus() {
+            this.select();
+        }
+
+        // Helper function to handle key press events
+        function handleKeyDown(updateFunction) {
+            return function(e) {
+                if (e.which === 13) { // Enter key
+                    e.preventDefault();
+                    this.blur();
+                    return;
                 }
-            });
+                
+                // Handle up/down arrows for numeric inputs and decimal input
+                if (this.type === 'number' || this === elements.decimalInput) {
+                    if (e.which === 38) { // Up arrow
+                        e.preventDefault();
+                        const currentValue = parseFloat(this.value) || 0;
+                        this.value = (currentValue + 1).toString();
+                        this.select();
+                        updateFunction();
+                    } else if (e.which === 40) { // Down arrow
+                        e.preventDefault();
+                        const currentValue = parseFloat(this.value) || 0;
+                        this.value = (currentValue - 1).toString();
+                        this.select();
+                        updateFunction();
+                    }
+                }
+            };
+        }
 
-            // Initial call
-            onFormatChange();
-        });
+        // Format change handler
+        function onFormatChange() {
+            currentFormat = FORMATS[elements.formatSelect.value];
+            currentBias = currentFormat.defaultBias;
+            elements.biasInput.value = currentBias;
+            userDecimalValue = elements.decimalInput.value; // Preserve user's value during format change
+            updateFormatInfo();
+            createBitDisplay();
+            updateFromDecimal();
+        }
+
+        // Bias change handler
+        function onBiasChange() {
+            currentBias = parseInt(elements.biasInput.value) || currentFormat.defaultBias;
+            isUpdating = false; // Ensure updateDisplay can run
+            updateFromDecimal();
+        }
+
+        // Special values change handler
+        function onSpecialValuesChange() {
+            useSpecialValues = elements.useSpecialValues.value === 'true';
+            updateDisplay();
+        }
+
+        // Update format information
+        function updateFormatInfo() {
+            elements.formatTitle.textContent = currentFormat.name;
+            elements.formatDescription.textContent = currentFormat.description;
+            elements.formatLink.innerHTML = currentFormat.link ? `<a href="${currentFormat.link}" target="_blank">More information</a>` : '';
+        }
+
+        // Create bit display
+        function createBitDisplay() {
+            elements.bitsContainer.innerHTML = '';
+            
+            // Create a container for the entire bit display
+            const bitDisplayContainer = document.createElement('div');
+            bitDisplayContainer.style.display = 'flex';
+            bitDisplayContainer.style.flexDirection = 'column';
+            bitDisplayContainer.style.alignItems = 'center';
+            bitDisplayContainer.style.gap = '5px';
+            
+            // Only show bit counters for formats with 32 bits or fewer to avoid layout issues
+            if (currentFormat.totalBits <= 32) {
+                // Create bit numbers row
+                const numbersContainer = document.createElement('div');
+                numbersContainer.className = 'bit-numbers';
+                
+                // Create bit numbers (counting down from totalBits-1 to 0)
+                for (let i = currentFormat.totalBits - 1; i >= 0; i--) {
+                    const numberElement = document.createElement('div');
+                    numberElement.className = 'bit-number';
+                    
+                    // Add dark background for groups of 4 (nibbles) - alternate every 4 bits
+                    const nibbleGroup = Math.floor((currentFormat.totalBits - 1 - i) / 4);
+                    if (nibbleGroup % 2 === 1) {
+                        numberElement.classList.add('dark');
+                    }
+                    
+                    numberElement.textContent = i;
+                    numbersContainer.appendChild(numberElement);
+                }
+                
+                bitDisplayContainer.appendChild(numbersContainer);
+            }
+            
+            // Create bits row
+            const bitsRow = document.createElement('div');
+            bitsRow.style.display = 'flex';
+            bitsRow.style.flexWrap = 'wrap';
+            bitsRow.style.justifyContent = 'center';
+            bitsRow.style.gap = '2px';
+            
+            for (let i = currentFormat.totalBits - 1; i >= 0; i--) {
+                const bitElement = document.createElement('div');
+                bitElement.className = 'bit';
+                bitElement.setAttribute('data-bit', i);
+                bitElement.textContent = '0';
+                
+                // Determine bit type for coloring
+                if (i === currentFormat.totalBits - 1) {
+                    bitElement.classList.add('sign-bit');
+                } else if (i >= currentFormat.mantBits) {
+                    bitElement.classList.add('exponent-bit');
+                } else {
+                    bitElement.classList.add('mantissa-bit');
+                }
+                
+                bitElement.addEventListener('click', () => toggleBit(i));
+                bitsRow.appendChild(bitElement);
+            }
+            
+            bitDisplayContainer.appendChild(bitsRow);
+            elements.bitsContainer.appendChild(bitDisplayContainer);
+        }
+
+        // Toggle bit
+        function toggleBit(bitIndex) {
+            bits ^= (1n << BigInt(bitIndex));
+            // Clear user decimal value since this came from bit clicking
+            userDecimalValue = '';
+            isUpdating = false; // Ensure updateDisplay can run
+            updateDisplay();
+        }
+
+        // Convert decimal to custom format
+        function decimalToCustomFormat(value) {
+            if (currentFormat.totalBits === 64) {
+                return decimalToFP64(value);
+            } else if (currentFormat.totalBits === 32) {
+                return decimalToFP32(value);
+            } else {
+                return decimalToCustom(value);
+            }
+        }
+
+        // Convert FP64
+        function decimalToFP64(value) {
+            const buffer = new ArrayBuffer(8);
+            const view = new DataView(buffer);
+            view.setFloat64(0, value, false);
+            return view.getBigUint64(0, false);
+        }
+
+        // Convert FP32
+        function decimalToFP32(value) {
+            const buffer = new ArrayBuffer(4);
+            const view = new DataView(buffer);
+            view.setFloat32(0, value, false);
+            return BigInt(view.getUint32(0, false));
+        }
+
+        // Convert to custom format
+        function decimalToCustom(value) {
+            if (value === 0) return 0n;
+            if (!isFinite(value)) {
+                const maxExp = (1 << currentFormat.expBits) - 1;
+                const signBit = value < 0 ? 1n : 0n;
+                if (useSpecialValues) {
+                    return (signBit << BigInt(currentFormat.totalBits - 1)) | (BigInt(maxExp) << BigInt(currentFormat.mantBits));
+                } else {
+                    // Treat as largest normal number
+                    const mantBits = (1n << BigInt(currentFormat.mantBits)) - 1n;
+                    return (signBit << BigInt(currentFormat.totalBits - 1)) | (BigInt(maxExp - 1) << BigInt(currentFormat.mantBits)) | mantBits;
+                }
+            }
+
+            const sign = value < 0 ? 1n : 0n;
+            const absValue = Math.abs(value);
+            
+            // Find exponent
+            let exp = Math.floor(Math.log2(absValue));
+            exp += currentBias;
+            
+            // Handle out of range
+            const maxExp = useSpecialValues ? (1 << currentFormat.expBits) - 2 : (1 << currentFormat.expBits) - 1;
+            if (exp > maxExp) {
+                // Overflow to infinity or max value
+                if (useSpecialValues) {
+                    return (sign << BigInt(currentFormat.totalBits - 1)) | (BigInt((1 << currentFormat.expBits) - 1) << BigInt(currentFormat.mantBits));
+                } else {
+                    const mantBits = (1n << BigInt(currentFormat.mantBits)) - 1n;
+                    return (sign << BigInt(currentFormat.totalBits - 1)) | (BigInt(maxExp) << BigInt(currentFormat.mantBits)) | mantBits;
+                }
+            }
+            
+            if (exp <= 0) {
+                // Subnormal or underflow
+                const shift = 1 - exp;
+                if (shift > currentFormat.mantBits) return sign << BigInt(currentFormat.totalBits - 1); // Zero
+                
+                const mantissa = Math.round(absValue * Math.pow(2, currentFormat.mantBits + currentBias - 1));
+                return (sign << BigInt(currentFormat.totalBits - 1)) | BigInt(mantissa);
+            }
+            
+            // Normal number
+            const mantissa = Math.round((absValue / Math.pow(2, exp - currentBias) - 1) * Math.pow(2, currentFormat.mantBits));
+            const clampedMantissa = Math.min(mantissa, (1 << currentFormat.mantBits) - 1);
+            
+            return (sign << BigInt(currentFormat.totalBits - 1)) | 
+                   (BigInt(exp) << BigInt(currentFormat.mantBits)) | 
+                   BigInt(clampedMantissa);
+        }
+
+        // Convert custom format to decimal
+        function customFormatToDecimal(bits) {
+            if (currentFormat.totalBits === 64) {
+                return fp64ToDecimal(bits);
+            } else if (currentFormat.totalBits === 32) {
+                return fp32ToDecimal(bits);
+            } else {
+                return customToDecimal(bits);
+            }
+        }
+
+        // FP64 to decimal
+        function fp64ToDecimal(bits) {
+            const buffer = new ArrayBuffer(8);
+            const view = new DataView(buffer);
+            view.setBigUint64(0, bits, false);
+            return view.getFloat64(0, false);
+        }
+
+        // FP32 to decimal
+        function fp32ToDecimal(bits) {
+            const buffer = new ArrayBuffer(4);
+            const view = new DataView(buffer);
+            view.setUint32(0, Number(bits), false);
+            return view.getFloat32(0, false);
+        }
+
+        // Custom to decimal
+        function customToDecimal(bits) {
+            const signBit = bits >> BigInt(currentFormat.totalBits - 1);
+            const expMask = (1n << BigInt(currentFormat.expBits)) - 1n;
+            const expBits = (bits >> BigInt(currentFormat.mantBits)) & expMask;
+            const mantBits = bits & ((1n << BigInt(currentFormat.mantBits)) - 1n);
+            
+            const sign = signBit ? -1 : 1;
+            const exp = Number(expBits);
+            const mant = Number(mantBits);
+            
+            const maxExp = (1 << currentFormat.expBits) - 1;
+            
+            // Handle special values
+            if (useSpecialValues && exp === maxExp) {
+                return mant === 0 ? (sign * Infinity) : NaN;
+            }
+            
+            // Handle zero
+            if (exp === 0 && mant === 0) {
+                return sign * 0;
+            }
+            
+            // Handle subnormal
+            if (exp === 0) {
+                return sign * (mant / Math.pow(2, currentFormat.mantBits)) * Math.pow(2, 1 - currentBias);
+            }
+            
+            // Normal number
+            const mantValue = 1 + (mant / Math.pow(2, currentFormat.mantBits));
+            return sign * mantValue * Math.pow(2, exp - currentBias);
+        }
+
+        // Extract components from bits
+        function extractComponents(bits) {
+            const signBit = bits >> BigInt(currentFormat.totalBits - 1);
+            const expMask = (1n << BigInt(currentFormat.expBits)) - 1n;
+            const expBits = (bits >> BigInt(currentFormat.mantBits)) & expMask;
+            const mantBits = bits & ((1n << BigInt(currentFormat.mantBits)) - 1n);
+            
+            return {
+                sign: Number(signBit),
+                exponent: Number(expBits),
+                mantissa: Number(mantBits)
+            };
+        }
+
+        // Create bits from components
+        function createBitsFromComponents(sign, exp, mant) {
+            const signBits = BigInt(sign) << BigInt(currentFormat.totalBits - 1);
+            const expBits = BigInt(exp) << BigInt(currentFormat.mantBits);
+            const mantBits = BigInt(mant) & ((1n << BigInt(currentFormat.mantBits)) - 1n);
+            
+            return signBits | expBits | mantBits;
+        }
+
+        // Update from decimal input
+        function updateFromDecimal() {
+            if (isUpdating) return;
+            isUpdating = true;
+            
+            const inputValue = elements.decimalInput.value.trim();
+            const value = parseFloat(inputValue);
+            
+            if (!isNaN(value) && inputValue !== '') {
+                // Store the user's typed value exactly as they entered it
+                userDecimalValue = inputValue;
+                bits = decimalToCustomFormat(value);
+                // Set isUpdating to false before calling updateDisplay so it can execute
+                isUpdating = false;
+                updateDisplay();
+                return;
+            } else if (inputValue === '' || inputValue === '-' || inputValue === '.' || inputValue === '-.') {
+                // Allow partial inputs while typing
+                userDecimalValue = inputValue;
+                isUpdating = false;
+                return;
+            }
+            
+            isUpdating = false;
+        }
+
+        // Update from binary input
+        function updateFromBinary() {
+            if (isUpdating) return;
+            isUpdating = true;
+            
+            const binaryStr = elements.binaryInput.value.replace(/[^01]/g, '');
+            if (binaryStr.length <= currentFormat.totalBits) {
+                bits = BigInt('0b' + (binaryStr || '0'));
+                // Clear user decimal value since this came from binary
+                userDecimalValue = '';
+                isUpdating = false;
+                updateDisplay();
+                return;
+            }
+            
+            isUpdating = false;
+        }
+
+        // Update from hex input
+        function updateFromHex() {
+            if (isUpdating) return;
+            isUpdating = true;
+            
+            let hexStr = elements.hexInput.value.replace(/[^0-9a-fA-F]/g, '');
+            // Allow any valid hex string, don't restrict by length
+            if (hexStr.length > 0) {
+                try {
+                    bits = BigInt('0x' + hexStr);
+                    // Mask to the correct number of bits for the format
+                    const maxBits = (1n << BigInt(currentFormat.totalBits)) - 1n;
+                    bits = bits & maxBits;
+                    // Clear user decimal value since this came from hex
+                    userDecimalValue = '';
+                    isUpdating = false;
+                    updateDisplay();
+                    return;
+                } catch (e) {
+                    // Invalid hex string, ignore
+                }
+            } else if (hexStr.length === 0) {
+                bits = 0n;
+                userDecimalValue = '';
+                isUpdating = false;
+                updateDisplay();
+                return;
+            }
+            
+            isUpdating = false;
+        }
+
+        // Update from components (decimal inputs)
+        function updateFromComponentsDecimal() {
+            if (isUpdating) return;
+            isUpdating = true;
+            
+            const sign = parseInt(elements.signDecimal.value) || 0;
+            const exp = parseInt(elements.exponentDecimal.value) || 0;
+            const mant = parseInt(elements.mantissaDecimal.value) || 0;
+            
+            bits = createBitsFromComponents(sign, exp, mant);
+            // Clear user decimal value since this came from components
+            userDecimalValue = '';
+            isUpdating = false;
+            updateDisplay();
+        }
+
+        // Update from components (binary inputs)
+        function updateFromComponentsBinary() {
+            if (isUpdating) return;
+            isUpdating = true;
+            
+            const signBin = elements.signBinary.value.replace(/[^01]/g, '') || '0';
+            const expBin = elements.exponentBinary.value.replace(/[^01]/g, '') || '0';
+            const mantBin = elements.mantissaBinary.value.replace(/[^01]/g, '') || '0';
+            
+            const sign = parseInt(signBin, 2) || 0;
+            const exp = parseInt(expBin, 2) || 0;
+            const mant = parseInt(mantBin, 2) || 0;
+            
+            bits = createBitsFromComponents(sign, exp, mant);
+            // Clear user decimal value since this came from components
+            userDecimalValue = '';
+            isUpdating = false;
+            updateDisplay();
+        }
+
+        // Update display
+        function updateDisplay() {
+            if (isUpdating) return;
+            
+            // Update bit display
+            const bitArray = [];
+            for (let i = 0; i < currentFormat.totalBits; i++) {
+                bitArray[i] = Number((bits >> BigInt(i)) & 1n);
+            }
+            
+            const bitElements = elements.bitsContainer.querySelectorAll('.bit');
+            bitElements.forEach((element, index) => {
+                const bitIndex = currentFormat.totalBits - 1 - index;
+                element.textContent = bitArray[bitIndex];
+            });
+            
+            // Calculate reconstructed value once
+            const reconstructed = customFormatToDecimal(bits);
+            
+            // Always update all other inputs (binary, hex, components) regardless of focus
+            elements.binaryInput.value = bits.toString(2).padStart(currentFormat.totalBits, '0');
+            elements.hexInput.value = bits.toString(16).toUpperCase().padStart(Math.ceil(currentFormat.totalBits / 4), '0');
+            
+            // Update components (always sync everything)
+            const components = extractComponents(bits);
+            
+            elements.signBinary.value = components.sign.toString(2);
+            elements.signDecimal.value = components.sign;
+            
+            elements.exponentBinary.value = components.exponent.toString(2).padStart(currentFormat.expBits, '0');
+            elements.exponentDecimal.value = components.exponent;
+            
+            elements.mantissaBinary.value = components.mantissa.toString(2).padStart(currentFormat.mantBits, '0');
+            elements.mantissaDecimal.value = components.mantissa;
+            
+            // Handle decimal input field specially to preserve user typing
+            // Always update reconstructed value field
+            elements.reconstructedValue.value = reconstructed.toString();
+            
+            // For decimal input, preserve user's exact input if it differs from reconstructed
+            if (userDecimalValue && document.activeElement === elements.decimalInput) {
+                // User is currently editing decimal input - keep their value
+                elements.decimalInput.value = userDecimalValue;
+            } else if (userDecimalValue && userDecimalValue !== '') {
+                // User has entered a value that may differ from reconstructed due to precision limits
+                const userValue = parseFloat(userDecimalValue);
+                const reconstructedValue = reconstructed;
+                
+                // Check if the values are significantly different (accounting for floating point precision)
+                const tolerance = Math.max(Math.abs(userValue) * 1e-12, 1e-15);
+                if (!isNaN(userValue) && Math.abs(userValue - reconstructedValue) > tolerance) {
+                    // Keep user's original input since it differs from reconstructed
+                    elements.decimalInput.value = userDecimalValue;
+                } else {
+                    // Values are essentially the same, update to reconstructed
+                    elements.decimalInput.value = reconstructed.toString();
+                    userDecimalValue = reconstructed.toString();
+                }
+            } else {
+                // No user value stored or empty - use reconstructed value
+                elements.decimalInput.value = reconstructed.toString();
+                userDecimalValue = reconstructed.toString();
+            }
+            
+            // Update formula and calculation
+            updateCalculation(components, reconstructed);
+            
+            // Check for special values
+            checkSpecialValues(components, reconstructed);
+        }
+
+        // Update calculation display
+        function updateCalculation(components, result) {
+            const sign = components.sign ? -1 : 1;
+            const exp = components.exponent - currentBias;
+            const mantValue = components.mantissa / Math.pow(2, currentFormat.mantBits);
+            
+            let formula;
+            if (components.exponent === 0) {
+                // Subnormal
+                formula = `${sign} × 2^${1-currentBias} × 0.${components.mantissa.toString(2).padStart(currentFormat.mantBits, '0')}`;
+            } else {
+                formula = `${sign} × 2^${exp} × (1 + ${mantValue.toFixed(6)})`;
+            }
+            
+            elements.formulaDisplay.textContent = formula;
+            elements.calculationResult.textContent = result.toString();
+        }
+
+        // Check for special values
+        function checkSpecialValues(components, result) {
+            const maxExp = (1 << currentFormat.expBits) - 1;
+            let specialType = '';
+            
+            if (useSpecialValues && components.exponent === maxExp) {
+                if (components.mantissa === 0) {
+                    specialType = components.sign ? 'Negative Infinity' : 'Positive Infinity';
+                } else {
+                    specialType = 'NaN (Not a Number)';
+                }
+            } else if (components.exponent === 0 && components.mantissa === 0) {
+                specialType = components.sign ? 'Negative Zero' : 'Positive Zero';
+            } else if (components.exponent === 0) {
+                specialType = 'Subnormal Number';
+            }
+            
+            if (specialType) {
+                elements.specialValueText.textContent = specialType;
+                elements.specialValuesInfo.classList.remove('hidden');
+            } else {
+                elements.specialValuesInfo.classList.add('hidden');
+            }
+        }
+
+        // Utility functions
+        function clearAllBits() {
+            bits = 0n;
+            userDecimalValue = '';
+            updateDisplay();
+        }
+
+        function setAllBits() {
+            bits = (1n << BigInt(currentFormat.totalBits)) - 1n;
+            userDecimalValue = '';
+            updateDisplay();
+        }
+
+        function randomValue() {
+            const randomBits = Math.floor(Math.random() * Math.pow(2, Math.min(currentFormat.totalBits, 32)));
+            bits = BigInt(randomBits);
+            userDecimalValue = '';
+            updateDisplay();
+        }
+
+        function resetToDefault() {
+            elements.decimalInput.value = '3.14159';
+            userDecimalValue = '3.14159';
+            updateFromDecimal();
+        }
+
+        // Initialize the application
+        init();
     </script>
 </body>
 </html>
