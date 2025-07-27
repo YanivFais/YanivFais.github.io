@@ -198,6 +198,20 @@
             background: #D99;
         }
 
+        span.sign { background: #DDF; }
+        span.exponent { background: #DFD; }
+        span.fraction { background: #FDD; }
+
+        .formula-notation {
+            font-family: 'Times New Roman', serif;
+            font-size: 0.9em;
+            color: #2e7d32;
+        }
+
+        .fraction-display {
+            font-style: italic;
+        }
+
         .legend {
             display: flex;
             justify-content: center;
@@ -217,6 +231,32 @@
             width: 20px;
             height: 20px;
             border-radius: 4px;
+        }
+
+        .fraction-math {
+            display: inline-block;
+            text-align: center;
+            vertical-align: middle;
+            font-size: 1.0em;
+            margin: 10px;
+            position: relative;
+            color: #2e7d32;
+        }
+
+        .fraction-math .numerator {
+            display: block;
+            padding: 0 5px;
+            border-bottom: 2px solid #2e7d32;
+            margin-bottom: 2px;
+            font-weight: bold;
+            color: #2e7d32;
+        }
+
+        .fraction-math .denominator {
+            display: block;
+            padding: 2px 5px 0 5px;
+            font-weight: bold;
+            color: #2e7d32;
         }
 
         .values-grid {
@@ -568,7 +608,39 @@
 
             <!-- Calculation Display -->
             <div class="calculation-display">
-                <h3>IEEE 754 Formula</h3>
+                <h3>
+                    IEEE 754 Formula: 
+                    <span class="sign-part">(-1)<sup>sign</sup></span> × 
+                    2<sup><span class="exponent-part" id="formula_exp">(exp-currentBias)</span></sup> × 
+                    <span class="mantissa-part" id="formula_hidden">[1 + </span>
+                        <span class="fraction-math" id="fractionMath">
+                            <span class="numerator" id="formula_num">Mantissa</span>
+                            <span class="denominator" id="formula_denum">(2<sup>24</sup>) </span>
+                        </span> 
+                    ]
+                    
+                </h3>
+           
+            <!-- <div class="formula">
+                <span class="formula" id="formulaDisplay">
+                    (-1)^sign x 2^exponent 
+                </span>
+                × 
+                ( 
+                <div class="formula" id="hidden_one">
+                    1 + 
+                </div>
+                <span class="fraction-math" id="fractionMath">
+                    <span class="numerator">M</span>
+                    <span class="denominator">(2^mantissa_bits) </span>
+                </span>
+                ) = 
+                <span class="formula" id="formulaDisplay2">
+                    (-1)^sign x 2^exponent x 1.M
+                </span>
+            </div>-->
+
+            <div class="formula">
                 <div class="formula" id="formulaDisplay">
                     (-1)^sign × 2^exponent × (1.mantissa)
                 </div>
@@ -638,6 +710,10 @@
             exponentDecimal: document.getElementById('exponentDecimal'),
             mantissaBinary: document.getElementById('mantissaBinary'),
             mantissaDecimal: document.getElementById('mantissaDecimal'),
+            formulaExp: document.getElementById('formula_exp'),
+            formulaHidden: document.getElementById('formula_hidden'),
+            formulaNum: document.getElementById('formula_num'),
+            formulaDenum: document.getElementById('formula_denum'),
             formulaDisplay: document.getElementById('formulaDisplay'),
             calculationResult: document.getElementById('calculationResult'),
             specialValuesInfo: document.getElementById('specialValuesInfo'),
@@ -754,6 +830,10 @@
             currentBias = currentFormat.defaultBias;
             elements.biasInput.value = currentBias;
             userDecimalValue = elements.decimalInput.value; // Preserve user's value during format change
+            if (currentFormat.totalBits == 4) {
+                useSpecialValues = false; // Disable special values for FP4
+                elements.useSpecialValues.value = 'false'; // Disable special values for FP4
+            }
             updateFormatInfo();
             createBitDisplay();
             updateFromDecimal();
@@ -1205,14 +1285,34 @@
             const mantValue = components.mantissa / Math.pow(2, currentFormat.mantBits);
             
             let formula;
+            formulaDenum = Math.pow(2, currentFormat.mantBits);
+            formulaNum = 1 + mantValue;
+            elements.formulaNum.textContent = components.mantissa;
+            elements.formulaDenum.textContent = formulaDenum.toString();
             if (components.exponent === 0) {
                 // Subnormal
                 formula = `${sign} × 2^${1-currentBias} × 0.${components.mantissa.toString(2).padStart(currentFormat.mantBits, '0')}`;
+                //formula = '<span class="sign">' + `${sign}` + '</span>' +
+                //      '&nbsp;&nbsp;&times;&nbsp;&nbsp;' +
+                //      '<span class="exponent">2<sup>' + `${1-currentBias}` + '</sup></span>' +
+                //      '&nbsp;&nbsp;&times;&nbsp;&nbsp;' +
+                //      '<span class="fraction">' + `0.${components.mantissa.toString(2).padStart(currentFormat.mantBits, '0')}` + '</span>';            
+                elements.formulaDisplay.textContent = formula;
+                elements.formulaHidden.textContent = '[0 + ';
+                elements.formulaExp.textContent = components.exponent + ' - ' + currentBias + '+ 1';
             } else {
-                formula = `${sign} × 2^${exp} × (1 + ${mantValue.toFixed(6)})`;
+                //formula = `${sign} × 2^${exp} × (1 + ${mantValue.toFixed(6)})`;
+                formula = '<span class="sign">' + `${sign}` + '</span>' +
+                      '&nbsp;&nbsp;&times;&nbsp;&nbsp;' +
+                      '<span class="exponent">2<sup>' + exp + '</sup></span>' +
+                      '&nbsp;&nbsp;&times;&nbsp;&nbsp;' +
+                      '<span class="fraction">' + `(1 + ${mantValue.toFixed(6)}` + ')</span>';
+                elements.formulaDisplay.innerHTML = formula;
+                elements.formulaHidden.textContent = '[1 + ';
+                elements.formulaExp.textContent = components.exponent + ' - ' + currentBias;
             }
             
-            elements.formulaDisplay.textContent = formula;
+            //elements.formulaDisplay.textContent = formula;
             elements.calculationResult.textContent = result.toString();
         }
 
